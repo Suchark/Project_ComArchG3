@@ -12,6 +12,7 @@ int convertNum(int num);
 
 int hashCode(int key);
 struct address *search(int key);
+bool checkBFInsert(char vals[MAXLINELENGTH]);
 void insert(int key, char val[MAXLINELENGTH]);
 struct address* delete(struct address* item);
 void displayTable();
@@ -66,18 +67,25 @@ int main(int argc, char *argv[])
     while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2))
     {
         sprintf(temp, "%s", label);
-        insert(i,temp);
+        if(checkBFInsert(temp)){
+            insert(i,temp);
+        }else{
+            fprintf(stderr, "Label '%s' has been repeated.\n",label);
+            exit(1);
+        }
         i++;
     }
+    // displayTable();
     /* this is how to rewind the file ptr so that you start reading from the
         beginning of the file */
     rewind(inFilePtr);
-
+    bool checkUndefine;
     int dex = 0b00000000000000000000000000000000;
     int twoCom = 0b11111111111111111111111111111111;
     int now = 0;
     while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2))
-    {
+    {   
+        checkUndefine = false;
         dex = 0b00000000000000000000000000000000;
         twoCom = 0b0000000000000000;
         if (!strcmp(opcode, "add")) {
@@ -101,16 +109,28 @@ int main(int argc, char *argv[])
                 dex |= atoi(arg0) << 19;
                 dex |= atoi(arg1) << 16;
             }
+            if (atoi(arg2) > 0xFFFF)
+            {   
+                fprintf(stderr, "OffSetField > 0xFFFF\n");
+                exit(1);
+            }
             if (isNumber(arg2))
             {
                 dex |= atoi(arg2) << 0;
             }else{
                 for (int j = 0; j < SIZE; j++)
                 {
-                    if(!strcmp(arg2, hashArray[j]->val)){
-                        dex |= hashArray[j]->key << 0;
-                        break;
+                    if(hashArray[j] != NULL){
+                        if(!strcmp(arg2, hashArray[j]->val)){
+                            dex |= hashArray[j]->key << 0;
+                            checkUndefine = true;
+                            break;
+                        }
                     }
+                }
+                if (checkUndefine != true){
+                    fprintf(stderr, "Label '%s' is Undefine.\n",arg2);
+                    exit(1);
                 }
             }
         }else if(!strcmp(opcode, "sw")){
@@ -119,15 +139,25 @@ int main(int argc, char *argv[])
                 dex |= atoi(arg0) << 19;
                 dex |= atoi(arg1) << 16;
             }
-            if (isNumber(arg2))
-            {
+            if (atoi(arg2) > 0xFFFF){   
+                fprintf(stderr, "OffSetField > 0xFFFF\n");
+                exit(1);
+            }
+            if (isNumber(arg2)){
                 dex |= atoi(arg2) << 0;
             }else{
                 for (int j = 0; j < SIZE; j++)
                 {
-                    if(!strcmp(arg2, hashArray[j]->val)){
-                        dex |= hashArray[j]->key << 0;
-                        break;
+                    if(hashArray[j] != NULL){
+                        if(!strcmp(arg2, hashArray[j]->val)){
+                            dex |= hashArray[j]->key << 0;
+                            checkUndefine = true;
+                            break;
+                        }
+                    }
+                    if (checkUndefine != true){
+                        fprintf(stderr, "Label '%s' is Undefine.\n",arg2);
+                        exit(1);
                     }
                 }
             }
@@ -137,21 +167,32 @@ int main(int argc, char *argv[])
                 dex |= atoi(arg0) << 19;
                 dex |= atoi(arg1) << 16;
             }
-            if (isNumber(arg2))
-            {
+            if (atoi(arg2) > 0xFFFF){   
+                fprintf(stderr, "OffSetField > 0xFFFF\n");
+                exit(1);
+            }
+            if (isNumber(arg2)){
                 dex |= atoi(arg2) << 0;
             }else{
                 for (int j = 0; j < SIZE; j++)
                 {
-                    if(!strcmp(arg2, hashArray[j]->val)){
-                        if(now > hashArray[j]->key){
-                            twoCom = (1 << 16) + (~(hashArray[j]->key+1)+1);
-                            dex |= twoCom;
-                        }else{
-                            dex |= hashArray[j]->key << 0;
+                    if(hashArray[j] != NULL){
+                        if(!strcmp(arg2, hashArray[j]->val)){
+                            if(now > hashArray[j]->key){
+                                twoCom = (1 << 16) + (~(hashArray[j]->key+1)+1);
+                                dex |= twoCom;
+                            }else{
+                                dex |= hashArray[j]->key << 0;
+                            }
+                            checkUndefine = true;
+                            break;
                         }
-                        break;
+                        if (checkUndefine != true){
+                        fprintf(stderr, "Label '%s' is Undefine.\n",arg2);
+                        exit(1);
                     }
+                    }
+                    
                 }
             }
         }else if(!strcmp(opcode, "jalr")){
@@ -170,12 +211,18 @@ int main(int argc, char *argv[])
             }else{
                 for (int k = 0; k < SIZE; k++)
                 {
-                    if(!strcmp(arg0, hashArray[k]->val)){
-                        dex |= hashArray[k]->key << 0;
-                        break;
+                    if(hashArray[k] != NULL){
+                        if(!strcmp(arg0, hashArray[k]->val)){
+                            dex |= hashArray[k]->key << 0;
+                            break;
+                        }
                     }
+                    
                 }
             }
+        }else{
+            fprintf(stderr, "Opcode '%s' is Undefine.\n",opcode);
+            exit(1);
         }
         fprintf(outFilePtr,"%d\n",dex);
         now++;
@@ -201,8 +248,7 @@ int main(int argc, char *argv[])
  *
  * exit(1) if line is too long.
  */
-int readAndParse(FILE *inFilePtr, char *label, char *opcode, char *arg0,
-    char *arg1, char *arg2)
+int readAndParse(FILE *inFilePtr, char *label, char *opcode, char *arg0,char *arg1, char *arg2)
 {
     char line[MAXLINELENGTH];
     char *ptr = line;
@@ -248,8 +294,6 @@ int hashCode(int key){
     return key % SIZE;
 }
 
-
-
 struct address *search(int key){
     //get the hash
     int hashIndex = hashCode(key);
@@ -268,26 +312,40 @@ struct address *search(int key){
     return NULL;
 }
 
-void insert(int key,char val[MAXLINELENGTH]){
-    struct address *item = (struct address*) malloc(sizeof(struct address));
-     
-    strcpy( item->val, val);
-    item->key = key;
-
-    //get the hash 
-    int hashIndex = hashCode(key);
-
-    //move in array until an empty or deleted cell
-    while(hashArray[hashIndex] != NULL && hashArray[hashIndex]->key != -1) {
-        //go to next cell
-        ++hashIndex;
-		
-        //wrap around the table
-        hashIndex %= SIZE;
+bool checkBFInsert(char vals[MAXLINELENGTH]){
+    for(int i = 0; i<SIZE; i++) {
+        if(hashArray[i] != NULL){
+            if(!strcmp(hashArray[i]->val,vals) && hashArray[i] != NULL){
+                return false;
+            }
+        }
     }
-
-    hashArray[hashIndex] = item; 
+    return true;
+        
     
+}
+
+void insert(int key,char vals[MAXLINELENGTH]){
+    if(strcmp(vals,"")){
+        struct address *item = (struct address*) malloc(sizeof(struct address));
+        
+        strcpy( item->val, vals);
+        item->key = key;
+
+        //get the hash 
+        int hashIndex = hashCode(key);
+
+        //move in array until an empty or deleted cell
+        while(hashArray[hashIndex] != NULL && hashArray[hashIndex]->key != -1) {
+            //go to next cell
+            ++hashIndex;
+            
+            //wrap around the table
+            hashIndex %= SIZE;
+        }
+
+        hashArray[hashIndex] = item;
+    }
 }
 
 struct address* delete(struct address* item) {
@@ -321,7 +379,6 @@ void displayTable() {
    int i = 0;
 	
    for(i = 0; i<SIZE; i++) {
-	
       if(hashArray[i] != NULL)
          printf(" (%d,%s)",hashArray[i]->key,hashArray[i]->val);
       else
@@ -329,12 +386,4 @@ void displayTable() {
    }
 	
    printf("\n");
-}
-
-int convertNum(int num){
-    if (num & (1<<15))
-    {
-        num -= (1<<16);
-    }
-    return num;
 }
