@@ -8,19 +8,17 @@
 
 int readAndParse(FILE *, char *, char *, char *, char *, char *);
 int isNumber(char *);
-int convertNum(int num);
 
-int hashCode(int key);
-struct address *search(int key);
-bool checkBFInsert(char vals[MAXLINELENGTH]);
-void insert(int key, char val[MAXLINELENGTH]);
-struct address* delete(struct address* item);
+int hashCode(int key); //Use the key to make hashcode.
+bool checkBFInsert(char vals[MAXLINELENGTH]); //Check for duplicate data before inserting.
+void insert(int key, char val[MAXLINELENGTH]);//Insert data.
+struct address* delete(struct address* item);//Delete data.
 void displayTable();
 
 struct address
 {
-    int key;
-    char val[MAXLINELENGTH];
+    int addr;
+    char nameLabel[MAXLINELENGTH];
 };
 
 struct address* hashArray[SIZE]; 
@@ -38,8 +36,8 @@ int main(int argc, char *argv[])
     }
 
     dummyItem = (struct address*) malloc(sizeof(struct address));
-    dummyItem->val[MAXLINELENGTH] = -1;  
-    dummyItem->key = -1; 
+    dummyItem->nameLabel[MAXLINELENGTH] = -1;  
+    dummyItem->addr = -1; 
 
     inFileString = argv[1];
     outFileString = argv[2];
@@ -55,30 +53,23 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    /* here is an example for how to use readAndParse to read a line from
-        inFilePtr */
-    // if (! readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2) ) {
-    //     /* reached end of file */
-    // }
-
-    // keep key .fill
     int i = 0;
     char temp[MAXLINELENGTH] = "x";
-    while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2))
+    while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) //ลูปสำหรับเก็บข้อมูล label
     {
-        sprintf(temp, "%s", label);
-        if(checkBFInsert(temp)){
-            insert(i,temp);
+        sprintf(temp, "%s", label); //นำ label ไปฝากไว้ใน Temp
+        if(checkBFInsert(temp)){ //เช็คข้อมูลก่อนที่จะ insert
+            insert(i,temp); // insert label พร้อม address ของ label
         }else{
-            fprintf(stderr, "Label '%s' has been repeated.\n",label);
+            fprintf(stderr, "Label '%s' has been repeated.\n",label); //แจ้งว่า label มีอยู่แล้ว
             exit(1);
         }
-        i++;
+        i++;//เช็คบรรทัดถัดไป
     }
     // displayTable();
-    /* this is how to rewind the file ptr so that you start reading from the
-        beginning of the file */
-    rewind(inFilePtr);
+
+    /* this is how to rewind the file ptr so that you start reading from the beginning of the file */
+    rewind(inFilePtr); //กลับไปเริ่มอ่านไฟล์ inFilePtr ใหม่
     bool checkUndefine;
     int dex = 0b00000000000000000000000000000000;
     int twoCom = 0b11111111111111111111111111111111;
@@ -88,132 +79,127 @@ int main(int argc, char *argv[])
         checkUndefine = false;
         dex = 0b00000000000000000000000000000000;
         twoCom = 0b0000000000000000;
-        if (!strcmp(opcode, "add")) {
-            dex |= 0b000 << 22;
+        if (!strcmp(opcode, "add")) { //ถ้า opcode = add
+            dex |= 0b000 << 22; //Bits 24-22 opcode is 000
             if(isNumber(arg0)&&isNumber(arg1)&&isNumber(arg2)){
-                dex |= atoi(arg0) << 19;
-                dex |= atoi(arg1) << 16;
-                dex |= atoi(arg2) << 0;
+                dex |= atoi(arg0) << 19; //Bits 21-19 reg0(rs)
+                dex |= atoi(arg1) << 16; //Bits 18-16 reg1(rt)
+                dex |= atoi(arg2) << 0; //Bits 2-0 reg2(rd)
                 
             } 
-        }else if(!strcmp(opcode, "nand")){
-            dex |= 0b001 << 22;
+        }else if(!strcmp(opcode, "nand")){ //ถ้า opcode = nand
+            dex |= 0b001 << 22; //Bits 24-22 opcode is 001
             if(isNumber(arg0)&&isNumber(arg1)&&isNumber(arg2)){
-                dex |= atoi(arg0) << 19;
-                dex |= atoi(arg1) << 16;
-                dex |= atoi(arg2) << 0;
+                dex |= atoi(arg0) << 19; //Bits 21-19 reg0(rs)
+                dex |= atoi(arg1) << 16; //Bits 18-16 reg1(rt)
+                dex |= atoi(arg2) << 0; //Bits 2-0 reg2(rd)
             }
-        }else if(!strcmp(opcode, "lw")){
-            dex |= 0b010 << 22;
+        }else if(!strcmp(opcode, "lw")){ //ถ้า opcode = lw
+            dex |= 0b010 << 22; //Bits 24-22 opcode is 010
             if(isNumber(arg0)&&isNumber(arg1)){
-                dex |= atoi(arg0) << 19;
-                dex |= atoi(arg1) << 16;
+                dex |= atoi(arg0) << 19; //Bits 21-19 reg0(rs)
+                dex |= atoi(arg1) << 16; //Bits 18-16 reg1(rt)
             }
-            if (atoi(arg2) > 0xFFFF)
-            {   
-                fprintf(stderr, "OffSetField > 0xFFFF\n");
+            if (atoi(arg2) > 0xFFFF){ //ถ้า arg2(OffSetField) มีจำนวนมากกว่า 16 bits   
+                fprintf(stderr, "OffSetField > 0xFFFF\n"); //แจ้งว่า arg2(OffSetField) เกิน 16 bits
                 exit(1);
             }
-            if (isNumber(arg2))
+            if (isNumber(arg2)) //ถ้า arg2 เป็นตัวเลข
             {
-                dex |= atoi(arg2) << 0;
-            }else{
-                for (int j = 0; j < SIZE; j++)
-                {
-                    if(hashArray[j] != NULL){
-                        if(!strcmp(arg2, hashArray[j]->val)){
-                            dex |= hashArray[j]->key << 0;
-                            checkUndefine = true;
+                dex |= atoi(arg2) << 0; //Bits 15-0 arg2(OffSetField)
+            }else{ //ถ้า arg2 ไม่เป็นตัวเลข
+                for (int j = 0; j < SIZE; j++){ //วิ่งหาข้อมูลใน hashArray ที่เก็บข้อมูล label
+                    if(hashArray[j] != NULL){ //เช็คก่อนว่า hashArray[j] != Null
+                        if(!strcmp(arg2, hashArray[j]->nameLabel)){ //เช็คว่า arg2(label) ตรงกับ nameLabel ใน hashArray[j]
+                            dex |= hashArray[j]->addr << 0; //นำเลข address ไปเก็บที่ตำแหน่งของ offsetField
+                            checkUndefine = true; //รู้จัก label
                             break;
                         }
                     }
                 }
-                if (checkUndefine != true){
-                    fprintf(stderr, "Label '%s' is Undefine.\n",arg2);
+                if (checkUndefine != true){ //ไม่รู้จัก label
+                    fprintf(stderr, "Label '%s' is Undefine.\n",arg2); //แจ้งว่าไม่รู้จัก label
                     exit(1);
                 }
             }
-        }else if(!strcmp(opcode, "sw")){
-            dex |= 0b011 << 22;
+        }else if(!strcmp(opcode, "sw")){ //ถ้า opcode = sw
+            dex |= 0b011 << 22; //Bits 24-22 opcode is 011
             if(isNumber(arg0)&&isNumber(arg1)){
-                dex |= atoi(arg0) << 19;
-                dex |= atoi(arg1) << 16;
+                dex |= atoi(arg0) << 19; //Bits 21-19 reg0(rs)
+                dex |= atoi(arg1) << 16; //Bits 18-16 reg1(rt)
             }
-            if (atoi(arg2) > 0xFFFF){   
-                fprintf(stderr, "OffSetField > 0xFFFF\n");
+            if (atoi(arg2) > 0xFFFF){ //เช็ค arg2(OffSetField) มีจำนวนมากกว่า 16 bits
+                fprintf(stderr, "OffSetField > 0xFFFF\n"); //แจ้งว่า arg2(OffSetField) เกิน 16 bits
                 exit(1);
             }
-            if (isNumber(arg2)){
-                dex |= atoi(arg2) << 0;
-            }else{
-                for (int j = 0; j < SIZE; j++)
-                {
-                    if(hashArray[j] != NULL){
-                        if(!strcmp(arg2, hashArray[j]->val)){
-                            dex |= hashArray[j]->key << 0;
-                            checkUndefine = true;
+            if (isNumber(arg2)){ //ถ้า arg2 เป็นตัวเลข
+                dex |= atoi(arg2) << 0; //Bits 15-0 arg2(OffSetField)
+            }else{ //ถ้า arg2 ไม่เป็นตัวเลข
+                for (int j = 0; j < SIZE; j++){ //วิ่งหาข้อมูลใน hashArray ที่เก็บข้อมูล label
+                    if(hashArray[j] != NULL){ //เช็คก่อนว่า hashArray[j] != Null
+                        if(!strcmp(arg2, hashArray[j]->nameLabel)){ //เช็คว่า arg2(label) ตรงกับ nameLabel ใน hashArray[j]
+                            dex |= hashArray[j]->addr << 0; //นำเลข address ไปเก็บที่ตำแหน่งของ offsetField
+                            checkUndefine = true; //รู้จัก label
                             break;
                         }
                     }
-                    if (checkUndefine != true){
-                        fprintf(stderr, "Label '%s' is Undefine.\n",arg2);
+                    if (checkUndefine != true){ //ไม่รู้จัก label
+                        fprintf(stderr, "Label '%s' is Undefine.\n",arg2); //แจ้งว่าไม่รู้จัก label
                         exit(1);
                     }
                 }
             }
-        }else if(!strcmp(opcode, "beq")){
-            dex |= 0b100 << 22;
+        }else if(!strcmp(opcode, "beq")){ //ถ้า opcode = beq
+            dex |= 0b100 << 22; //Bits 24-22 opcode is 100
             if(isNumber(arg0)&&isNumber(arg1)){
-                dex |= atoi(arg0) << 19;
-                dex |= atoi(arg1) << 16;
+                dex |= atoi(arg0) << 19; //Bits 21-19 reg0(rs)
+                dex |= atoi(arg1) << 16; //Bits 18-16 reg1(rt)
             }
-            if (atoi(arg2) > 0xFFFF){   
-                fprintf(stderr, "OffSetField > 0xFFFF\n");
+            if (atoi(arg2) > 0xFFFF){ //เช็ค arg2(OffSetField) มีจำนวนมากกว่า 16 bits
+                fprintf(stderr, "OffSetField > 0xFFFF\n"); //แจ้งว่า arg2(OffSetField) เกิน 16 bits
                 exit(1);
             }
-            if (isNumber(arg2)){
-                dex |= atoi(arg2) << 0;
-            }else{
-                for (int j = 0; j < SIZE; j++)
-                {
-                    if(hashArray[j] != NULL){
-                        if(!strcmp(arg2, hashArray[j]->val)){
-                            if(now > hashArray[j]->key){
-                                twoCom = (1 << 16) + (~(hashArray[j]->key+1)+1);
+            if (isNumber(arg2)){ //ถ้า arg2 เป็นตัวเลข
+                dex |= atoi(arg2) << 0; //Bits 15-0 arg2(OffSetField)
+            }else{ //ถ้า arg2 ไม่เป็นตัวเลข
+                for (int j = 0; j < SIZE; j++){ //วิ่งหาข้อมูลใน hashArray ที่เก็บข้อมูล label
+                    if(hashArray[j] != NULL){ //เช็คก่อนว่า hashArray[j] != Null
+                        if(!strcmp(arg2, hashArray[j]->nameLabel)){ //เช็คว่า arg2(label) ตรงกับ nameLabel ใน hashArray[j]
+                            if(now > hashArray[j]->addr){ //ถ้าบรรทัด address ปัจจุบัน มากกว่า address ของ label
+                                twoCom = (1 << 16) + (~(hashArray[j]->addr+1)+1);
                                 dex |= twoCom;
-                            }else{
-                                dex |= hashArray[j]->key << 0;
+                            }else{ //ถ้าบรรทัด address ปัจจุบัน น้อยกว่า address ของ label
+                                dex |= hashArray[j]->addr << 0;
                             }
-                            checkUndefine = true;
+                            checkUndefine = true; //รู้จัก label
                             break;
                         }
-                        if (checkUndefine != true){
-                        fprintf(stderr, "Label '%s' is Undefine.\n",arg2);
+                        if (checkUndefine != true){ //ไม่รู้จัก label
+                        fprintf(stderr, "Label '%s' is Undefine.\n",arg2); //แจ้งว่าไม่รู้จัก label
                         exit(1);
                     }
                     }
                     
                 }
             }
-        }else if(!strcmp(opcode, "jalr")){
-            dex |= 0b101 << 22;
+        }else if(!strcmp(opcode, "jalr")){ //ถ้า opcode = jalr
+            dex |= 0b101 << 22; //Bits 24-22 opcode is 101
             if(isNumber(arg0)&&isNumber(arg1)){
-                dex |= atoi(arg0) << 19;
-                dex |= atoi(arg1) << 16;
+                dex |= atoi(arg0) << 19; //Bits 21-19 reg0(rs)
+                dex |= atoi(arg1) << 16; //Bits 18-16 reg1(rd)
             }
-        }else if(!strcmp(opcode, "halt")){
-            dex |= 0b110 << 22;
-        }else if(!strcmp(opcode, "noop")){
-            dex |= 0b111 << 22;
-        }else if(!strcmp(opcode, ".fill")){
-            if(isNumber(arg0)){
-                dex |= atoi(arg0) << 0;
-            }else{
-                for (int k = 0; k < SIZE; k++)
-                {
-                    if(hashArray[k] != NULL){
-                        if(!strcmp(arg0, hashArray[k]->val)){
-                            dex |= hashArray[k]->key << 0;
+        }else if(!strcmp(opcode, "halt")){ //ถ้า opcode = halt
+            dex |= 0b110 << 22; //Bits 24-22 opcode is 110
+        }else if(!strcmp(opcode, "noop")){ //ถ้า opcode = noop
+            dex |= 0b111 << 22; //Bits 24-22 opcode is 111
+        }else if(!strcmp(opcode, ".fill")){ //ถ้า opcode = .fill
+            if(isNumber(arg0)){ //ถ้า arg0 เป็นตัวเลข
+                dex |= atoi(arg0) << 0; //Bits 15-0 arg2(OffSetField)
+            }else{ //ถ้า arg2 ไม่เป็นตัวเลข
+                for (int k = 0; k < SIZE; k++){ //วิ่งหาข้อมูลใน hashArray ที่เก็บข้อมูล label
+                    if(hashArray[k] != NULL){ //เช็คก่อนว่า hashArray[k] != Null
+                        if(!strcmp(arg0, hashArray[k]->nameLabel)){ //เช็คว่า arg0(label) ตรงกับ nameLabel ใน hashArray[k]
+                            dex |= hashArray[k]->addr << 0; //เก็บค่าของ label
                             break;
                         }
                     }
@@ -221,17 +207,11 @@ int main(int argc, char *argv[])
                 }
             }
         }else{
-            fprintf(stderr, "Opcode '%s' is Undefine.\n",opcode);
+            fprintf(stderr, "Opcode '%s' is Undefine.\n",opcode); //แจ้งว่าไม่รู้จัก Opcode
             exit(1);
         }
         fprintf(outFilePtr,"%d\n",dex);
         now++;
-    }
-
-    /* after doing a readAndParse, you may want to do the following to test the
-        opcode */
-    if (!strcmp(opcode, "add")) {
-        /* do whatever you need to do for opcode "add" */
     }
 
     return(0);
@@ -294,28 +274,10 @@ int hashCode(int key){
     return key % SIZE;
 }
 
-struct address *search(int key){
-    //get the hash
-    int hashIndex = hashCode(key);
-
-    //move in array untill an empty
-    while (hashArray[hashIndex] != NULL){
-        if (hashArray[hashIndex]->key == key){
-            return hashArray[hashIndex];
-        }
-
-        ++hashIndex;
-
-        hashIndex %= SIZE;
-        
-    }
-    return NULL;
-}
-
 bool checkBFInsert(char vals[MAXLINELENGTH]){
     for(int i = 0; i<SIZE; i++) {
         if(hashArray[i] != NULL){
-            if(!strcmp(hashArray[i]->val,vals) && hashArray[i] != NULL){
+            if(!strcmp(hashArray[i]->nameLabel,vals) && hashArray[i] != NULL){
                 return false;
             }
         }
@@ -329,14 +291,14 @@ void insert(int key,char vals[MAXLINELENGTH]){
     if(strcmp(vals,"")){
         struct address *item = (struct address*) malloc(sizeof(struct address));
         
-        strcpy( item->val, vals);
-        item->key = key;
+        strcpy( item->nameLabel, vals);
+        item->addr = key;
 
         //get the hash 
         int hashIndex = hashCode(key);
 
         //move in array until an empty or deleted cell
-        while(hashArray[hashIndex] != NULL && hashArray[hashIndex]->key != -1) {
+        while(hashArray[hashIndex] != NULL && hashArray[hashIndex]->addr != -1) {
             //go to next cell
             ++hashIndex;
             
@@ -349,7 +311,7 @@ void insert(int key,char vals[MAXLINELENGTH]){
 }
 
 struct address* delete(struct address* item) {
-   int key = item->key;
+   int key = item->addr;
 
    //get the hash 
    int hashIndex = hashCode(key);
@@ -357,7 +319,7 @@ struct address* delete(struct address* item) {
    //move in array until an empty 
    while(hashArray[hashIndex] !=NULL) {
 	
-      if(hashArray[hashIndex]->key == key) {
+      if(hashArray[hashIndex]->addr == key) {
          struct address* temp = hashArray[hashIndex]; 
 			
          //assign a dummy item at deleted position
@@ -380,7 +342,7 @@ void displayTable() {
 	
    for(i = 0; i<SIZE; i++) {
       if(hashArray[i] != NULL)
-         printf(" (%d,%s)",hashArray[i]->key,hashArray[i]->val);
+         printf(" (%d,%s)",hashArray[i]->addr,hashArray[i]->nameLabel);
       else
          printf(" ~~ ");
    }
