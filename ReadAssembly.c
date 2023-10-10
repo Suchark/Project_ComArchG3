@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
         printf("error in opening inFileStrin %s\n", inFileString);
         exit(1);
     }
+
     outFilePtr = fopen(outFileString, "w");
     if (outFilePtr == NULL) {
         printf("error in opening outFileString %s\n", outFileString);
@@ -66,7 +67,6 @@ int main(int argc, char *argv[])
         }
         i++;//เช็คบรรทัดถัดไป
     }
-    // displayTable();
 
     /* this is how to rewind the file ptr so that you start reading from the beginning of the file */
     rewind(inFilePtr); //กลับไปเริ่มอ่านไฟล์ inFilePtr ใหม่
@@ -143,10 +143,10 @@ int main(int argc, char *argv[])
                             break;
                         }
                     }
-                    if (checkUndefine != true){ //ไม่รู้จัก label
-                        fprintf(stderr, "Label '%s' is Undefine.\n",arg2); //แจ้งว่าไม่รู้จัก label
-                        exit(1);
-                    }
+                }
+                if (checkUndefine != true){ //ไม่รู้จัก label
+                    fprintf(stderr, "Label '%s' is Undefine.\n",arg2); //แจ้งว่าไม่รู้จัก label
+                    exit(1);
                 }
             }
         }else if(!strcmp(opcode, "beq")){ //ถ้า opcode = beq
@@ -174,12 +174,11 @@ int main(int argc, char *argv[])
                             checkUndefine = true; //รู้จัก label
                             break;
                         }
-                        if (checkUndefine != true){ //ไม่รู้จัก label
-                        fprintf(stderr, "Label '%s' is Undefine.\n",arg2); //แจ้งว่าไม่รู้จัก label
-                        exit(1);
                     }
-                    }
-                    
+                }
+                if (checkUndefine != true){ //ไม่รู้จัก label
+                    fprintf(stderr, "Label '%s' is Undefine.\n",arg2); //แจ้งว่าไม่รู้จัก label
+                    exit(1);
                 }
             }
         }else if(!strcmp(opcode, "jalr")){ //ถ้า opcode = jalr
