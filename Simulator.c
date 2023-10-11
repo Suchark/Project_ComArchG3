@@ -53,15 +53,15 @@ int main(int argc, char *argv[])
     }
     
     state.pc = 0; //set program counter = 0
-    int count = 0; // set count = 0 เพื่อใช้นับ instructions executed
-    char input[100]; //กำหนดจำนวน input ที่รับได้ 
+    int count = 0; // สร้างตัวแปร count เพื่อใช้นับ instructions executed
+    char input[100]; //สร้างตัวแปร input ไว้รับ input 
     for(int i = 0; 1 ; i++){ //สร้าง loop เพื่อวนแต่ละ instruction
-        printf("Enter 'yes' to continue: "); //เอาไว้คอย check
-        fgets(input, sizeof(input), stdin); //เอาไว้คอย check
+        printf("Enter 'yes' to continue: "); //เอาไว้ check
+        fgets(input, sizeof(input), stdin); //เอาไว้ check
        
-        int opcode = (state.mem[i] >> 22) & 0x7; //ดึง opcode ออกมาจาก machine code
+        int opcode = (state.mem[i] >> 22) & 0x7; //เอาส่วน opcode ออกมาจาก machine code
         
-        count++; // นับ instructions executed
+        count++; //ทำ instructions executed แต่ละครั้ง count จะเพิ่มทีละ 1
         if (strcmp(input, "y\n") == 0 || strcmp(input, "Y\n") == 0) { // ตรวจสอบข้อมูลที่ป้อน   
             printState(&state); // printstate ก่อนทำ instruction ต่างๆ
             
