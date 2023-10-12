@@ -26,3 +26,4 @@ mplier .fill 10383  ค่าตัวหาร (Multiplier)
 result .fill 0      ค่าผลลัพธ์ (Result)
 one .fill 1          ค่า 1
 neg_one .fill -1     ค่า -1
+
