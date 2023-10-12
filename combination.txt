@@ -1,0 +1,45 @@
+main:
+ addi a1,a1,7  #n
+ addi a0,a0,3  #r
+ addi a7,a7,0 #zero
+ addi a5,a5,0 #result
+ addi sp,sp,-4
+ addi a6,a6,-1  #stack end
+ sw a6,0(sp)
+
+combination:
+
+beq a0,a7,basecase
+beq a1,a0,basecase
+
+combination2:    #(n-1,r-1)
+addi a1,a1,-1
+addi a0,a0,-1
+addi sp,sp,-4
+sw a0,0(sp)
+addi sp,sp,-4
+sw a1,0(sp)
+jal combination1
+
+
+
+combination1:    #(n-1,r)
+addi a0,a0,1
+beq a0,a7,basecase
+beq a1,a0,basecase
+jal combination2
+
+
+
+basecase:
+ lw a3, 0(sp)
+beq a6,a3,done
+ addi a5,a5,1
+ lw a1, 0(sp)
+ addi sp,sp,4
+ lw a0, 0(sp)
+ addi sp,sp,4
+ jal combination
+
+done:
+addi a5,a5,1
