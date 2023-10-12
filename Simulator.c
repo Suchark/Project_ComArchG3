@@ -117,7 +117,7 @@ void printState(stateType *statePtr)
 
 
 void Add(stateType *AddPtr , int i){
-    printf("Add..."); //เอาไว้ check
+    printf("Add...\n"); //เอาไว้ check
     int rs = (AddPtr->mem[i] >> 19) & 0x7; // rs = ค่าใน RegA
     int rt = (AddPtr->mem[i] >> 16) & 0x7; // rt = ค่าใน RegB
     int rd = (AddPtr->mem[i]) & 0x7; //rd = ค่าใน destReg
@@ -125,11 +125,11 @@ void Add(stateType *AddPtr , int i){
     AddPtr->reg[rd] = sum; //นำคำตอบเก็บใน destReg
 }
 void Nand(stateType *NandPtr, int i){
-    printf("Nand..."); //เอาไว้ check
+    printf("Nand...\n"); //เอาไว้ check
     int rs = (NandPtr->mem[i] >> 19) & 0x7; // rs = ค่าใน RegA
     int rt = (NandPtr->mem[i] >> 16) & 0x7; // rt = ค่าใน RegB
     int rd = (NandPtr->mem[i]) & 0x7; //rd = ค่าใน destReg
-    int sum = !(NandPtr->reg[rs] & NandPtr->reg[rt]); //ผลลัพธ์ได้จาก ~(rs & rt) 
+    int sum = ~(rs & rt);
     NandPtr->reg[rd] = sum; //นำคำตอบเก็บใน destReg
 }
 void LW(stateType *LWPtr, int i){
@@ -143,7 +143,7 @@ void LW(stateType *LWPtr, int i){
     // printf("\n %d %d %d\n",rs,rt,OF);
 }
 void SW(stateType *SWPtr, int i){
-    printf("SW..."); //เอาไว้ check
+    printf("SW...\n"); //เอาไว้ check
     int rs = (SWPtr->mem[i] >> 19) & 0x7; // rs = ค่าใน RegA
     int rt = (SWPtr->mem[i] >> 16) & 0x7; // rt = ค่าใน RegB
     int OFF = (SWPtr->mem[i]) & 0xFFFF; // ค่า offsetField เป็นเลข16-bit และเป็น 2’s complement
@@ -151,7 +151,7 @@ void SW(stateType *SWPtr, int i){
     SWPtr->mem[sum] = SWPtr->reg[rt]; //Store RegB ใน memory
 }
 void Beq(stateType *BeqPtr, int i){
-    printf("Beq..."); //เอาไว้ check
+    printf("Beq...\n"); //เอาไว้ check
     int rs = (BeqPtr->mem[i] >> 19) & 0x7; // rs = ค่าใน RegA
     int rt = (BeqPtr->mem[i] >> 16) & 0x7; // rt = ค่าใน RegB
     short OFF = (BeqPtr->mem[i]) & 0xFFFF; // ค่า offsetField เป็นเลข16-bit และเป็น 2’s complement
@@ -162,7 +162,7 @@ void Beq(stateType *BeqPtr, int i){
 
 }
 void Jalr(stateType *JalrPtr, int i){
-    printf("Jalr..."); //เอาไว้ check
+    printf("Jalr...\n"); //เอาไว้ check
     int rs = (JalrPtr->mem[i] >> 19) & 0x7; // rs = ค่าใน RegA
     int rd = (JalrPtr->mem[i] >> 16) & 0x7; // rd = ค่าใน RegB
     JalrPtr->reg[rd] = i+1; //เก็บค่า PC+1 ไว้ใน RegB
